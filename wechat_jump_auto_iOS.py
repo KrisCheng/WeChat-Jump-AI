@@ -31,7 +31,7 @@ with open('config.json', 'r') as f:
     config = json.load(f)
 
 
-# Magic Number，不设置可能无法正常执行，请根据具体截图从上到下按需设置
+# Metaphysics Hyperparameters，不设置可能无法正常执行，请根据具体截图从上到下按需设置
 under_game_score_y = config['under_game_score_y']     # 截图中刚好低于分数显示区域的 Y 坐标，300 是 1920x1080 的值，2K 屏、全面屏请根据实际情况修改
 press_coefficient = config['press_coefficient']       # 长按的时间系数，请自己根据实际情况调节
 piece_base_height_1_2 = config['piece_base_height_1_2']   # 二分之一的棋子底座高度，可能要调节
@@ -39,15 +39,15 @@ piece_body_width = config['piece_body_width']             # 棋子的宽度，�
 time_coefficient = config['press_coefficient']
 
 # 模拟按压的起始点坐标，需要自动重复游戏请设置成“再来一局”的坐标
-if config.get('swipe'):
-    swipe = config['swipe']
-else:
-    swipe = {
-        "x1": 320,
-        "y1": 410,
-        "x2": 320,
-        "y2": 410
-    }
+# if config.get('swipe'):
+#     swipe = config['swipe']
+# else:
+#     swipe = {
+#         "x1": 320,
+#         "y1": 410,
+#         "x2": 320,
+#         "y2": 410
+#     }
 
 c = wda.Client()
 s = c.session()
@@ -63,7 +63,7 @@ def pull_screenshot():
 
 def jump(distance):
     press_time = distance * time_coefficient / 1000
-    print('press time: {}'.format(press_time))
+    print('press time: {}'.format(press_time) + 's')
     s.tap_hold(200, 200, press_time)
 
 
@@ -88,35 +88,40 @@ def save_debug_creenshot(ts, im, piece_x, piece_y, board_x, board_y):
     im.save('{}{}_d.png'.format(screenshot_backup_dir, ts))
 
 
-def set_button_position(im):
-    # 将swipe设置为 `再来一局` 按钮的位置
-    global swipe_x1, swipe_y1, swipe_x2, swipe_y2
+# def set_button_position(im):
+#     # 将swipe设置为 `再来一局` 按钮的位置
+#     global swipe_x1, swipe_y1, swipe_x2, swipe_y2
+#     w, h = im.size
+#     left = w / 2
+#     top = 1003 * (h / 1280.0) + 10
+#     swipe_x1, swipe_y1, swipe_x2, swipe_y2 = left, top, left, top
+
+
+# 第一种找坐标方案
+def find_piece_and_board_1(im):
     w, h = im.size
-    left = w / 2
-    top = 1003 * (h / 1280.0) + 10
-    swipe_x1, swipe_y1, swipe_x2, swipe_y2 = left, top, left, top
 
-
-def find_piece_and_board(im):
-    w, h = im.size
-
-    print("size: {}, {}".format(w, h))
+    print("screen size: {}, {}".format(w, h))
 
     piece_x_sum = 0
     piece_x_c = 0
     piece_y_max = 0
     board_x = 0
     board_y = 0
+
     scan_x_border = int(w / 8)  # 扫描棋子时的左右边界
     scan_start_y = 0  # 扫描的起始y坐标
+
+    # RGB channel
     im_pixel = im.load()
 
-    # 以50px步长，尝试探测scan_start_y
+    # 以50px步长，尝试探测scan_start_y,即开始检测的y坐标
     for i in range(under_game_score_y, h, 50):
         last_pixel = im_pixel[0, i]
         for j in range(1, w):
+            
+            # 记录当前点的RGB值
             pixel = im_pixel[j, i]
-
             # 不是纯色的线，则记录scan_start_y的值，准备跳出循环
             if pixel[0] != last_pixel[0] or pixel[1] != last_pixel[1] or pixel[2] != last_pixel[2]:
                 scan_start_y = i - 50
@@ -131,7 +136,8 @@ def find_piece_and_board(im):
     for i in range(scan_start_y, int(h * 2 / 3)):
         for j in range(scan_x_border, w - scan_x_border):  # 横坐标方面也减少了一部分扫描开销
             pixel = im_pixel[j, i]
-            # 根据棋子的最低行的颜色判断，找最后一行那些点的平均值，这个颜色这样应该 OK，暂时不提出来
+
+            # 根据棋子的最低行的颜色判断，找最后一行那些点的平均值，这个颜色这样应该 OK 再平均得到棋子坐标
             if (50 < pixel[0] < 60) and (53 < pixel[1] < 63) and (95 < pixel[2] < 110):
                 piece_x_sum += j
                 piece_x_c += 1
@@ -139,6 +145,7 @@ def find_piece_and_board(im):
 
     if not all((piece_x_sum, piece_x_c)):
         return 0, 0, 0, 0
+
     piece_x = piece_x_sum / piece_x_c
     piece_y = piece_y_max - piece_base_height_1_2  # 上移棋子底盘高度的一半
 
@@ -151,11 +158,11 @@ def find_piece_and_board(im):
 
         for j in range(w):
             pixel = im_pixel[j, i]
-            # 修掉脑袋比下一个小格子还高的情况的 bug
+            # 修掉棋子脑袋比下一个小格子还高的情况的bug
             if abs(j - piece_x) < piece_body_width:
                 continue
 
-            # 修掉圆顶的时候一条线导致的小 bug，这个颜色判断应该 OK，暂时不提出来
+            # x的平均值就是目标的x坐标，先记录那些颜色异常点（下一个格子）的x坐标
             if abs(pixel[0] - last_pixel[0]) + abs(pixel[1] - last_pixel[1]) + abs(pixel[2] - last_pixel[2]) > 10:
                 board_x_sum += j
                 board_x_c += 1
@@ -171,24 +178,36 @@ def find_piece_and_board(im):
 
     return piece_x, piece_y, board_x, board_y
 
+# 第二种找坐标方案（物体检测）
+def find_piece_and_board_2(im):
+    w, h = im.size
+
+    print("screen size: {}, {}".format(w, h))
+
 
 def main():
     while True:
+        # 当前截图
         pull_screenshot()
         im = Image.open("./1.png")
 
         # 获取棋子和 board 的位置
-        piece_x, piece_y, board_x, board_y = find_piece_and_board(im)
-        ts = int(time.time())
-        print(ts, piece_x, piece_y, board_x, board_y)
+        piece_x, piece_y, board_x, board_y = find_piece_and_board_1(im)
+
+        print("Piece: ", piece_x, ',', piece_y)
+        print("Board: ", board_x, ',', board_y)
+
+        # game over
         if piece_x == 0:
             return
 
-        set_button_position(im)
+        # set_button_position(im)
 
         distance = math.sqrt((board_x - piece_x) ** 2 + (board_y - piece_y) ** 2)
         jump(distance)
 
+        ts = int(time.time())
+        print(ts)
         save_debug_creenshot(ts, im, piece_x, piece_y, board_x, board_y)
         backup_screenshot(ts)
 
