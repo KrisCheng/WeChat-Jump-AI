@@ -17,6 +17,9 @@ PATH_TO_CKPT = 'wechat_jump_inference_graph/frozen_inference_graph.pb'
 PATH_TO_LABELS = 'retrain/wechat_jump_label_map.pbtxt'
 NUM_CLASSES = 7
 
+
+
+
 # 加载模型
 detection_graph = tf.Graph()
 with detection_graph.as_default():

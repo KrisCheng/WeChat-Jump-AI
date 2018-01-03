@@ -30,6 +30,7 @@ import json
 with open('config.json', 'r') as f:
     config = json.load(f)
 
+
 # Metaphysics Hyperparameters，不设置可能无法正常执行，请根据具体截图从上到下按需设置
 under_game_score_y = config['under_game_score_y']     # 截图中刚好低于分数显示区域的 Y 坐标，300 是 1920x1080 的值，2K 屏、全面屏请根据实际情况修改
 press_coefficient = config['press_coefficient']       # 长按的时间系数，请自己根据实际情况调节
@@ -186,6 +187,7 @@ def main():
         backup_screenshot(ts, temp)
 
         time.sleep(random.uniform(1, 1.1))   # 为了保证截图的时候应落稳了，多延迟一会儿
+
 
 if __name__ == '__main__':
     main()
