@@ -1,2 +1,5 @@
 screenshot_backups
 *.pb
+*.record
+Object_Detection/train/ssd_mobilenet_v1_coco_11_06_2017
+Object_Detection/train/output
