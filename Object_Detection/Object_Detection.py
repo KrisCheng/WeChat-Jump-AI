@@ -13,12 +13,9 @@ if tf.__version__ != '1.4.0':
     raise ImportError('Please upgrade your tensorflow installation to v1.4.0!')
 
 # 模型配置
-PATH_TO_CKPT = 'wechat_jump_inference_graph/frozen_inference_graph.pb'
-PATH_TO_LABELS = 'retrain/wechat_jump_label_map.pbtxt'
+PATH_TO_CKPT = 'model/frozen_inference_graph_frcnn_inception_v2_coco.pb'
+PATH_TO_LABELS = 'config/wechat_jump_label_map.pbtxt'
 NUM_CLASSES = 7
-
-
-
 
 # 加载模型
 detection_graph = tf.Graph()
@@ -40,7 +37,7 @@ s = c.session()
 def pull_screenshot():
     c.screenshot('screenshot.png')
 
-# 数据增强
+# 数据增强版本
 def data_augmentation(path):
     image_np = cv2.imread(path)
     image_np = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
@@ -60,6 +57,15 @@ def data_augmentation(path):
     images[7, int(0.05 * HEIGHT)+1:, :, :] = image_np[:int(0.95 * HEIGHT), :, :]
     images[8, int(0.05 * HEIGHT)+1:, int(0.05 * WIDTH)+1:, :] = image_np[:int(0.95 * HEIGHT), :int(0.95 * WIDTH), :]
 
+    return image_np, images, WIDTH, HEIGHT
+
+# 普通数据读取版本
+def read_image(path):
+    image_np = cv2.imread(path)
+    image_np = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
+    WIDTH = image_np.shape[1]
+    HEIGHT = image_np.shape[0]
+    images = np.expand_dims(image_np, axis=0)
     return image_np, images, WIDTH, HEIGHT
 
 # 还原平移
@@ -160,7 +166,7 @@ with detection_graph.as_default():
             (boxes, scores, classes, num) = sess.run(
                 [detection_boxes, detection_scores, detection_classes, num_detections], 
                 feed_dict={image_tensor: images})
-            boxes = process_boxes(boxes)
+            boxes = process_boxes(boxes)  #是否需要还原平移
 
             boxes = np.reshape(boxes, (-1, boxes.shape[-1]))
             scores = np.reshape(scores, (-1))
@@ -174,9 +180,6 @@ with detection_graph.as_default():
             cp, tp, target_type = get_positions(chess_x, boxes, classes, scores, category_index)
             chess_x = (cp[1] + cp[3]) / 2
             target_x = (tp[1] + tp[3]) / 2
-            
-            # if loop > 1:
-                # alpha *= distance / np.abs(chess_x - chess_x_prev)
 
             distance = np.abs(chess_x - target_x)
 
