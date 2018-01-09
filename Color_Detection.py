@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 
 '''
-Desc: the RGB color detetction version of the WeChat jump game, the device is iPhone6/iPhone6s,
-if your device is not that, please tune parameters by yourself.
+Desc: the RGB color detetction version of the WeChat jump game, the test device is iPhone6/iPhone6s,
+if your device is not that, please tune parameters by yourself. here for more details:
+https://github.com/wangshub/wechat_jump_game/wiki/Android-%E5%92%8C-iOS-%E6%93%8D%E4%BD%9C%E6%AD%A5%E9%AA%A4
 '''
 
 import os
@@ -14,19 +15,13 @@ import time
 from PIL import Image, ImageDraw
 import random
 
-# Some predefined parameters
+# some predefined parameters
 chess_tune = 13       # chess parameter tune
 chess_width = 49      # the width of the chess
 distance_time = 0.002 # the mapping from distance to press time
 
-# the iPhone configuration, open the seesion, 
-# detail from: https://github.com/wangshub/wechat_jump_game/wiki/Android-%E5%92%8C-iOS-%E6%93%8D%E4%BD%9C%E6%AD%A5%E9%AA%A4
 client = wda.Client()
 session = client.session()
-
-screenshot_backup_dir = 'screenshot_backups/'
-if not os.path.isdir(screenshot_backup_dir):
-    os.mkdir(screenshot_backup_dir)
 
 def get_screenshot():
     client.screenshot('screenshot.png')
@@ -101,6 +96,12 @@ def jump(jump_count, distance):
     print('Press Time: {}'.format(press_time) + 's')
     print('Jump Count: {}'.format(jump_count))
     session.tap_hold(200, 200, press_time)
+
+screenshot_backup_dir = 'screenshot/'
+if os.path.isdir(screenshot_backup_dir):
+    shutil.rmtree(screenshot_backup_dir) 
+if not os.path.isdir(screenshot_backup_dir):
+    os.mkdir(screenshot_backup_dir)
 
 def save_marked_creenshot(jump_count, image, chess_x, chess_y, board_x, board_y):
     draw = ImageDraw.Draw(image)
