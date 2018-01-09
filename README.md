@@ -1,8 +1,5 @@
 # README
 
-Group Member:
-
-
 
 ## Overview
 
@@ -20,10 +17,11 @@ This is the instruction of how to run the program on your own machine, including
 
 the file structure as follow:
 	
-	s
+TODO
 
 ## Step
 
+TODO
 
 
 
