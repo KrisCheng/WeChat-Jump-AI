@@ -192,16 +192,16 @@ def draw_bounding_box_on_image(image,
     text_bottom -= text_height - 2 * margin
 
 
-def draw_bounding_boxes_on_image_array(image,
-                                       boxes,
+def draw_bounding_objects_on_image_array(image,
+                                       objects,
                                        color='red',
                                        thickness=4,
                                        display_str_list_list=()):
-  """Draws bounding boxes on image (numpy array).
+  """Draws bounding objects on image (numpy array).
 
   Args:
     image: a numpy array object.
-    boxes: a 2 dimensional numpy array of [N, 4]: (ymin, xmin, ymax, xmax).
+    objects: a 2 dimensional numpy array of [N, 4]: (ymin, xmin, ymax, xmax).
            The coordinates are in normalized format between [0, 1].
     color: color to draw bounding box. Default is red.
     thickness: line thickness. Default value is 4.
@@ -212,24 +212,24 @@ def draw_bounding_boxes_on_image_array(image,
                            multiple labels.
 
   Raises:
-    ValueError: if boxes is not a [N, 4] array
+    ValueError: if objects is not a [N, 4] array
   """
   image_pil = Image.fromarray(image)
-  draw_bounding_boxes_on_image(image_pil, boxes, color, thickness,
+  draw_bounding_objects_on_image(image_pil, objects, color, thickness,
                                display_str_list_list)
   np.copyto(image, np.array(image_pil))
 
 
-def draw_bounding_boxes_on_image(image,
-                                 boxes,
+def draw_bounding_objects_on_image(image,
+                                 objects,
                                  color='red',
                                  thickness=4,
                                  display_str_list_list=()):
-  """Draws bounding boxes on image.
+  """Draws bounding objects on image.
 
   Args:
     image: a PIL.Image object.
-    boxes: a 2 dimensional numpy array of [N, 4]: (ymin, xmin, ymax, xmax).
+    objects: a 2 dimensional numpy array of [N, 4]: (ymin, xmin, ymax, xmax).
            The coordinates are in normalized format between [0, 1].
     color: color to draw bounding box. Default is red.
     thickness: line thickness. Default value is 4.
@@ -240,64 +240,64 @@ def draw_bounding_boxes_on_image(image,
                            multiple labels.
 
   Raises:
-    ValueError: if boxes is not a [N, 4] array
+    ValueError: if objects is not a [N, 4] array
   """
-  boxes_shape = boxes.shape
-  if not boxes_shape:
+  objects_shape = objects.shape
+  if not objects_shape:
     return
-  if len(boxes_shape) != 2 or boxes_shape[1] != 4:
+  if len(objects_shape) != 2 or objects_shape[1] != 4:
     raise ValueError('Input must be of size [N, 4]')
-  for i in range(boxes_shape[0]):
+  for i in range(objects_shape[0]):
     display_str_list = ()
     if display_str_list_list:
       display_str_list = display_str_list_list[i]
-    draw_bounding_box_on_image(image, boxes[i, 0], boxes[i, 1], boxes[i, 2],
-                               boxes[i, 3], color, thickness, display_str_list)
+    draw_bounding_box_on_image(image, objects[i, 0], objects[i, 1], objects[i, 2],
+                               objects[i, 3], color, thickness, display_str_list)
 
 
-def draw_bounding_boxes_on_image_tensors(images,
-                                         boxes,
+def draw_bounding_objects_on_image_tensors(images,
+                                         objects,
                                          classes,
                                          scores,
                                          category_index,
-                                         max_boxes_to_draw=20,
+                                         max_objects_to_draw=20,
                                          min_score_thresh=0.2):
-  """Draws bounding boxes on batch of image tensors.
+  """Draws bounding objects on batch of image tensors.
 
   Args:
     images: A 4D uint8 image tensor of shape [N, H, W, C].
-    boxes: [N, max_detections, 4] float32 tensor of detection boxes.
+    objects: [N, max_detections, 4] float32 tensor of detection objects.
     classes: [N, max_detections] int tensor of detection classes. Note that
       classes are 1-indexed.
     scores: [N, max_detections] float32 tensor of detection scores.
     category_index: a dict that maps integer ids to category dicts. e.g.
       {1: {1: 'dog'}, 2: {2: 'cat'}, ...}
-    max_boxes_to_draw: Maximum number of boxes to draw on an image. Default 20.
+    max_objects_to_draw: Maximum number of objects to draw on an image. Default 20.
     min_score_thresh: Minimum score threshold for visualization. Default 0.2.
 
   Returns:
-    4D image tensor of type uint8, with boxes drawn on top.
+    4D image tensor of type uint8, with objects drawn on top.
   """
-  visualize_boxes_fn = functools.partial(
-      visualize_boxes_and_labels_on_image_array,
+  visualize_objects_fn = functools.partial(
+      visualize_objects_and_labels_on_image_array,
       category_index=category_index,
       instance_masks=None,
       keypoints=None,
       use_normalized_coordinates=True,
-      max_boxes_to_draw=max_boxes_to_draw,
+      max_objects_to_draw=max_objects_to_draw,
       min_score_thresh=min_score_thresh,
       agnostic_mode=False,
       line_thickness=4)
 
-  def draw_boxes(image_boxes_classes_scores):
-    """Draws boxes on image."""
-    (image, boxes, classes, scores) = image_boxes_classes_scores
-    image_with_boxes = tf.py_func(visualize_boxes_fn,
-                                  [image, boxes, classes, scores], tf.uint8)
-    return image_with_boxes
+  def draw_objects(image_objects_classes_scores):
+    """Draws objects on image."""
+    (image, objects, classes, scores) = image_objects_classes_scores
+    image_with_objects = tf.py_func(visualize_objects_fn,
+                                  [image, objects, classes, scores], tf.uint8)
+    return image_with_objects
 
   images = tf.map_fn(
-      draw_boxes, (images, boxes, classes, scores),
+      draw_objects, (images, objects, classes, scores),
       dtype=tf.uint8,
       back_prop=False)
   return images
@@ -382,63 +382,63 @@ def draw_mask_on_image_array(image, mask, color='red', alpha=0.7):
   np.copyto(image, np.array(pil_image.convert('RGB')))
 
 
-def visualize_boxes_and_labels_on_image_array(image,
-                                              boxes,
+def visualize_objects_and_labels_on_image_array(image,
+                                              objects,
                                               classes,
                                               scores,
                                               category_index,
                                               instance_masks=None,
                                               keypoints=None,
                                               use_normalized_coordinates=False,
-                                              max_boxes_to_draw=20,
+                                              max_objects_to_draw=20,
                                               min_score_thresh=.5,
                                               agnostic_mode=False,
                                               line_thickness=4):
-  """Overlay labeled boxes on an image with formatted scores and label names.
+  """Overlay labeled objects on an image with formatted scores and label names.
 
-  This function groups boxes that correspond to the same location
+  This function groups objects that correspond to the same location
   and creates a display string for each detection and overlays these
   on the image. Note that this function modifies the image in place, and returns
   that same image.
 
   Args:
     image: uint8 numpy array with shape (img_height, img_width, 3)
-    boxes: a numpy array of shape [N, 4]
+    objects: a numpy array of shape [N, 4]
     classes: a numpy array of shape [N]. Note that class indices are 1-based,
       and match the keys in the label map.
     scores: a numpy array of shape [N] or None.  If scores=None, then
-      this function assumes that the boxes to be plotted are groundtruth
-      boxes and plot all boxes as black with no classes or scores.
+      this function assumes that the objects to be plotted are groundtruth
+      objects and plot all objects as black with no classes or scores.
     category_index: a dict containing category dictionaries (each holding
       category index `id` and category name `name`) keyed by category indices.
     instance_masks: a numpy array of shape [N, image_height, image_width], can
       be None
     keypoints: a numpy array of shape [N, num_keypoints, 2], can
       be None
-    use_normalized_coordinates: whether boxes is to be interpreted as
+    use_normalized_coordinates: whether objects is to be interpreted as
       normalized coordinates or not.
-    max_boxes_to_draw: maximum number of boxes to visualize.  If None, draw
-      all boxes.
+    max_objects_to_draw: maximum number of objects to visualize.  If None, draw
+      all objects.
     min_score_thresh: minimum score threshold for a box to be visualized
     agnostic_mode: boolean (default: False) controlling whether to evaluate in
       class-agnostic mode or not.  This mode will display scores but ignore
       classes.
-    line_thickness: integer (default: 4) controlling line width of the boxes.
+    line_thickness: integer (default: 4) controlling line width of the objects.
 
   Returns:
-    uint8 numpy array with shape (img_height, img_width, 3) with overlaid boxes.
+    uint8 numpy array with shape (img_height, img_width, 3) with overlaid objects.
   """
-  # Create a display string (and color) for every box location, group any boxes
+  # Create a display string (and color) for every box location, group any objects
   # that correspond to the same location.
   box_to_display_str_map = collections.defaultdict(list)
   box_to_color_map = collections.defaultdict(str)
   box_to_instance_masks_map = {}
   box_to_keypoints_map = collections.defaultdict(list)
-  if not max_boxes_to_draw:
-    max_boxes_to_draw = boxes.shape[0]
-  for i in range(min(max_boxes_to_draw, boxes.shape[0])):
+  if not max_objects_to_draw:
+    max_objects_to_draw = objects.shape[0]
+  for i in range(min(max_objects_to_draw, objects.shape[0])):
     if scores is None or scores[i] > min_score_thresh:
-      box = tuple(boxes[i].tolist())
+      box = tuple(objects[i].tolist())
       if instance_masks is not None:
         box_to_instance_masks_map[box] = instance_masks[i]
       if keypoints is not None:
@@ -463,7 +463,7 @@ def visualize_boxes_and_labels_on_image_array(image,
           box_to_color_map[box] = STANDARD_COLORS[
               classes[i] % len(STANDARD_COLORS)]
 
-  # Draw all boxes onto image.
+  # Draw all objects onto image.
   for box, color in box_to_color_map.items():
     ymin, xmin, ymax, xmax = box
     if instance_masks is not None:

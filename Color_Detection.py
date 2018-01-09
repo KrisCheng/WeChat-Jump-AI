@@ -62,7 +62,7 @@ def get_position(screenshot):
     for i in range (int (h / 3), int (h * 2 / 3)):
         last_pixel = screen_pixel[0, i]
 
-        # judge if game over
+        # judge get the value, break
         if board_x or board_y:
             break
         board_x_sum = 0
