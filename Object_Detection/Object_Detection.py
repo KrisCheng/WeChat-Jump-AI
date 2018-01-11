@@ -17,9 +17,9 @@ import cv2
 from utils import label_map_util
 from utils import visualization_utils as vis_util
 import random
-
+ 
 # model configuration
-model_path = 'model/model1.pb'
+model_path = 'model/model.pb'
 model_config = 'config/label_map.pbtxt'
 class_num = 7
 
@@ -112,7 +112,7 @@ with detection_graph.as_default():
 
             # get the positon of chess and board
             chess_position, board_position, target_type = get_positions(objects, classes, scores, category_index)
-            print(objects)
+        
             chess_x = (chess_position[1] + chess_position[3]) / 2
             board_x = (board_position[1] + board_position[3]) / 2
             distance = np.abs(chess_x - board_x)

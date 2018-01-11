@@ -21,7 +21,7 @@ The file structure as follow:
 	-- ColorDetection.py (the RGB color detection version of this game.)
 	-- Object_Detection
 		-- Object_Detection.py (the object detection version of this game, based on TensorFlow)
-		-- model (the model folders, contain 2 models, model1 is trained with faster rcnn, model2 is trained with SSD)
+		-- model (the model folders, contain the pre-trained model)
 		-- utils (contains the deeplearing util tools which is used on main program)
 		-- config (contains the object detection configuration file of TensorFlow)
 

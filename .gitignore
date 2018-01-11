@@ -1,5 +1,3 @@
 screenshot_backups
-*.pb
 *.record
 *.png
-Object_Detection/train

@@ -116,10 +116,10 @@ def save_marked_creenshot(jump_count, image, chess_x, chess_y, board_x, board_y)
     draw.ellipse((chess_x - 10, chess_y - 10, chess_x + 10, chess_y + 10), fill=(255, 0, 255))
     draw.ellipse((board_x - 10, board_y - 10, board_x + 10, board_y + 10), fill=(0, 0, 255))
     del draw
-    image.save('{}{}.png'.format(screenshot_backup_dir, jump_count))
+    # image.save('{}{}.png'.format(screenshot_backup_dir, jump_count))
 
 def main():
-    jump_count = 0
+    jump_count = 395
     while True:
         # get the current screenshot
         get_screenshot()
@@ -141,8 +141,9 @@ def main():
         jump(jump_count, distance)
 
         # save the position screenshot for debug
-        save_marked_creenshot(jump_count, screenshot, chess_x, chess_y, board_x, board_y)
+        # save_marked_creenshot(jump_count, screenshot, chess_x, chess_y, board_x, board_y)
 
+        screenshot.save('{}{}.png'.format(screenshot_backup_dir, jump_count))
         # take a break, make sure the chess is safety
         time.sleep(random.uniform(1, 1.1))
 
